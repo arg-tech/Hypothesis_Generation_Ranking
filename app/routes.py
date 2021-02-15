@@ -1,9 +1,7 @@
 from flask import render_template, request, redirect, session, Markup
-from . import application
+from . import app
 import pandas as pd
 from urllib.request import urlopen
-from app.centrality import Centrality
-from app.svg_parse import SVGParse
 import requests
 import json
 import urllib
@@ -12,14 +10,14 @@ import os
 import uuid
 
 
-@application.route('/')
-@application.route('/index')
+@app.route('/')
+@app.route('/index')
 def index():
     return render_template('index.html')
 
 
 
-@application.route('/index', methods=['POST'])
+@app.route('/index', methods=['POST'])
 def my_form_post():
     iat_mode = 'false'
     text = request.form['text']
