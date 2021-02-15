@@ -13,12 +13,16 @@ import uuid
 @app.route('/')
 @app.route('/index')
 def index():
+    return redirect('/form')
+
+
+@app.route('/form')
+def my_form():
     return render_template('index.html')
 
-
-
-@app.route('/index', methods=['POST'])
+@app.route('/form', methods=['POST'])
 def my_form_post():
+    print('GOT HERE')
     iat_mode = 'false'
     text = request.form['text']
     session['text_var'] = text
