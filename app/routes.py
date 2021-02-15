@@ -23,3 +23,8 @@ def my_form_post():
     text = request.form['text']
     session['text_var'] = text
     return redirect('/results')
+
+@app.route('/results')
+def render_text():
+    text = session.get('text_var', None)
+    return render_template('results.html')
