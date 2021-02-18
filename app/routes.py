@@ -18,6 +18,7 @@ from glob import glob
 import spacy
 import sys
 import statistics
+import os.path
 
 
 @app.route('/')
