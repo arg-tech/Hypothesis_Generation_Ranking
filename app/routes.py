@@ -8,6 +8,16 @@ import urllib
 import tempfile
 import os
 import uuid
+from app.centrality import Centrality
+from app.SentenceSimilarity import SentenceSimilarity
+from itertools import combinations
+import datetime
+import copy
+import re
+from glob import glob
+import spacy
+import sys
+import statistics
 
 
 @app.route('/')
@@ -31,4 +41,7 @@ def my_form_post():
 @app.route('/results')
 def render_text():
     text = session.get('text_var', None)
+
+    print(text)
+
     return render_template('results.html')
