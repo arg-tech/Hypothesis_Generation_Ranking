@@ -106,6 +106,11 @@ def render_text():
     edges_cp.extend(alt_edges)
     alt_jsn_copy['edges'] = edges_cp
 
+    graph2 = cent.get_graph_string(alt_jsn_copy)
+    new_i_nodes = cent.get_i_node_list(graph2)
+
+    print(new_i_nodes)
+
     hyp_explan = get_exps(alt_jsn_copy)
 
     hyp_explain = [hyp  for hyp in hyp_explan if 'H' in str(hyp[0])]
@@ -117,7 +122,7 @@ def render_text():
     print('Explanations in text files structure_explanation.txt, rules_explanation.txt, alternative_hyps_explanation.txt')
 
     write_json_to_file(alt_jsn_copy, 'generated_hyps.json')
-    return render_template('results.html', hypothesis_list = hypoths_list, alt_hypoth = alternative_hypotheses)
+    return render_template('results.html', hypothesis_list = hypoths_list, alt_hypoth = alternative_hypotheses, question = text)
 
 def get_json_string(node_path):
     dta = ''
