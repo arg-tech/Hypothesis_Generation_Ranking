@@ -125,9 +125,18 @@ class Centrality:
         return i_nodes
 
     @staticmethod
+    def get_degree_centrality(graph):
+
+        cent = nx.degree_centrality(graph)
+
+        nx.set_node_attributes(graph, cent, 'degree_central')
+        i_nodes =  [(x,y['degree_central'],y['text']) for x,y in graph.nodes(data=True) if y['type']=='I']
+        return i_nodes
+
+    @staticmethod
     def sort_by_centrality(i_nodes):
         sorted_by_second = sorted(i_nodes, key=lambda tup: tup[1])
-        ordered_ids = [(i[0],i[2]) for i in sorted_by_second]
+        ordered_ids = [(i[0],i[1],i[2]) for i in sorted_by_second]
 
         return ordered_ids
 
@@ -417,3 +426,24 @@ class Centrality:
                 if node_text == 'Hypothesising':
                     hyp_nodes.append(i_node)
         return hyp_nodes
+    @staticmethod
+    def get_i_ra_nodes(graph, cent_i_nodes):
+        i_list = []
+        for i in cent_i_nodes:
+            node_succ = list(graph.predecessors(i[0]))
+            ra_list = []
+            for n in node_succ:
+                n_type = graph.nodes[n]['type']
+                if n_type == 'RA':
+                    node_I = list(graph.predecessors(n))
+                    for i_node in node_I:
+                        node_type = graph.nodes[i_node]['type']
+                        if node_type == 'I':
+                            ra_list.append(i_node)
+            count = 0
+            if len(ra_list) > 0:
+                count = 1 - (1 / len(ra_list))
+            else:
+                count = 0
+            i_list.append([i[0],i[1],i[2], count])
+        return i_list

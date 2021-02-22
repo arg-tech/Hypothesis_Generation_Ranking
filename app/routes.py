@@ -19,6 +19,7 @@ import spacy
 import sys
 import statistics
 import os.path
+from scipy import stats
 
 
 @app.route('/')
@@ -107,9 +108,10 @@ def render_text():
     alt_jsn_copy['edges'] = edges_cp
 
     graph2 = cent.get_graph_string(alt_jsn_copy)
-    new_i_nodes = cent.get_i_node_list(graph2)
-
-    print(new_i_nodes)
+    cent_i_nodes = cent.get_degree_centrality(graph2)
+    sorted_i_nodes = cent.sort_by_centrality(cent_i_nodes)
+    incoming_nodes = cent.get_i_ra_nodes(graph, sorted_i_nodes)
+    ranked_i_nodes = get_ranking(sorted_i_nodes)
 
     hyp_explan = get_exps(alt_jsn_copy)
 
@@ -1160,3 +1162,40 @@ def write_json_to_file(jsn, path):
 
     with open(path, 'w') as fp:
         json.dump(jsn, fp)
+
+def get_ranking(cent_i_nodes):
+    i_nodes_df = pd.DataFrame(cent_i_nodes, columns=['ID','centrality','text', 'count'])
+    i_nodes_df['ranking'] = (i_nodes_df['centrality'] + i_nodes_df['count'])/2
+    i_nodes_list = i_nodes_df.values.tolist()
+    return i_nodes_list
+
+def remove_node(jsn, node_id):
+    for i, node in enumerate(jsn['nodes']):
+        n_id = node['nodeID']
+        if str(n_id) == str(node_id):
+            del jsn['nodes'][i]
+            break
+
+def remove_edge(jsn, node_id):
+    other_nodes = []
+    for i, node in enumerate(jsn['edges']):
+        to_id = node['toID']
+        from_id = node['fromID']
+        if str(to_id) == str(node_id):
+            other_nodes.append(from_id)
+            del jsn['edges'][i]
+
+        elif str(from_id) == str(node_id):
+            other_nodes.append(to_id)
+            del jsn['nodes'][i]
+    return other_nodes
+
+def remove_nodes(jsn, node_id):
+    remove_node(jsn, node_id)
+    other_nodes_list = remove_edge(jsn, node_id)
+    for node in other_nodes_list:
+        remove_node(jsn, node)
+        other_nodes_lst = remove_edge(jsn, node)
+        for n in other_nodes_lst:
+            other_lst = remove_edge(jsn, n)
+    return jsn
