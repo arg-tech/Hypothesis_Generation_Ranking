@@ -39,6 +39,21 @@ def my_form_post():
     session['text_var'] = text
     return redirect('/results')
 
+
+@app.route('/process_list', methods=['POST'])
+def process_list():
+    data = request.get_json()
+    aif_jsn = data['aif_json']
+    removed_nodes = data['removed_nodes']
+
+    for node in removed_nodes:
+        aif_jsn = remove_nodes(aif_jsn, node)
+
+
+
+    print(aif_jsn)
+    return 'Found'
+
 @app.route('/results')
 def render_text():
     text = session.get('text_var', None)
@@ -110,8 +125,8 @@ def render_text():
     graph2 = cent.get_graph_string(alt_jsn_copy)
     cent_i_nodes = cent.get_degree_centrality(graph2)
     sorted_i_nodes = cent.sort_by_centrality(cent_i_nodes)
-    incoming_nodes = cent.get_i_ra_nodes(graph, sorted_i_nodes)
-    ranked_i_nodes = get_ranking(sorted_i_nodes)
+    incoming_nodes = cent.get_i_ra_nodes(graph2, sorted_i_nodes)
+    ranked_i_nodes = get_ranking(incoming_nodes)
 
     hyp_explan = get_exps(alt_jsn_copy)
 
@@ -124,7 +139,7 @@ def render_text():
     print('Explanations in text files structure_explanation.txt, rules_explanation.txt, alternative_hyps_explanation.txt')
 
     write_json_to_file(alt_jsn_copy, 'generated_hyps.json')
-    return render_template('results.html', hypothesis_list = hypoths_list, alt_hypoth = alternative_hypotheses, question = text)
+    return render_template('results.html', hypothesis_list = hypoths_list, alt_hypoth = alternative_hypotheses, question = text, aif_jsn = alt_jsn_copy)
 
 def get_json_string(node_path):
     dta = ''

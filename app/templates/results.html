@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
 <style>
 .accordion {
   background-color: #eee;
@@ -29,7 +30,23 @@
   font-size: 15px;
 }
 
+.evaluate {
+  background-color: #eee;
+  color: #444;
+  cursor: pointer;
+  padding: 18px;
+  width: 10%;
+  border: none;
+  text-align: center;
+  outline: none;
+  font-size: 15px;
+}
+
 .active, .accordion:hover {
+  background-color: #ccc;
+}
+
+.evaluate:hover {
   background-color: #ccc;
 }
 
@@ -65,16 +82,77 @@
 <h2> {{ question }}</h2>
     {% for hyp in hypothesis_list %}
 
-    <button class="accordion"> {{ hyp[0] }}</button>
+    <button id="btn" class="accordion"> {{hyp[1]}}</button>
 
     <div class="panel">
         <p> {{ hyp[1] }} </p>
     </div>
     <button class="cross"> X </button>
     {% endfor %}
+
+    <button onclick="printList()" class="evaluate"> Evaluate </button>
 <script>
+var hypotheses = {{ hypothesis_list|tojson }};
+var alt_hyp = {{ alt_hypoth|tojson}};
+var aif_jsn = {{ aif_jsn|tojson}};
+var evaluate = document.getElementsByClassName("evaluate");
+var remove_list = [];
+
+function printList(){
+
+    var corp = {
+            'hypotheses': hypotheses,
+            'alt_hyps': alt_hyp,
+            'removed_nodes': remove_list,
+            'aif_json': aif_jsn
+        }
+
+    console.log(hypotheses);
+    $.ajax({
+    type: "POST",
+    url: "/process_list",
+    credentials: "same-origin",
+    contentType: "application/json",
+    data: JSON.stringify(corp),
+    dataType: "json",
+    success: function(response) {
+        console.log(response);
+    },
+    error: function(err) {
+        console.log(err);
+    }
+});
+}
+
+var btn = document.getElementsByClassName("cross");
+var i;
+
+for (i = 0; i < btn.length; i++) {
+  btn[i].addEventListener("click", function() {
+    this.style.backgroundColor = "blue";
+    var panel = this.previousElementSibling;
+    var btn_acc = panel.previousElementSibling;
+    var btn_text = btn_acc.textContent;
+    console.log(hypotheses);
+    console.log(btn_text);
+
+    for( var row = 0 ; row < hypotheses.length ; row++){
+        txt = hypotheses[row][1];
+        removed_id = hypotheses[row][0];
+        remove_list.push(removed_id);
+        if(txt.trim() == btn_text.trim()){
+            hypotheses.splice(row, 1);
+        }
+    }
+    panel.remove();
+    btn_acc.remove();
+    this.remove();
+  });
+}
+
 var acc = document.getElementsByClassName("accordion");
 var i;
+
 
 for (i = 0; i < acc.length; i++) {
   acc[i].addEventListener("click", function() {
