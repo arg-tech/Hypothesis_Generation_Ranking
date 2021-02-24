@@ -82,10 +82,14 @@
 <h2> {{ question }}</h2>
     {% for hyp in hypothesis_list %}
 
-    <button id="btn" class="accordion"> {{hyp[1]}}</button>
+    <button id="btn" class="accordion"> {{hyp[2]}} </button>
 
     <div class="panel">
-        <p> {{ hyp[1] }} </p>
+        <p> Node Ranking: {{hyp[4]}}</p>
+        <p> Because:  </p>
+        {% for h in hyp[5] %}
+        <p> {{ h[1] }} </p>
+        {% endfor %}
     </div>
     <button class="cross"> X </button>
     {% endfor %}
@@ -97,6 +101,7 @@ var alt_hyp = {{ alt_hypoth|tojson}};
 var aif_jsn = {{ aif_jsn|tojson}};
 var evaluate = document.getElementsByClassName("evaluate");
 var remove_list = [];
+var question = {{question|tojson}};
 
 function printList(){
 
@@ -104,7 +109,8 @@ function printList(){
             'hypotheses': hypotheses,
             'alt_hyps': alt_hyp,
             'removed_nodes': remove_list,
-            'aif_json': aif_jsn
+            'aif_json': aif_jsn,
+            'text' : question
         }
 
     console.log(hypotheses);
@@ -137,10 +143,11 @@ for (i = 0; i < btn.length; i++) {
     console.log(btn_text);
 
     for( var row = 0 ; row < hypotheses.length ; row++){
-        txt = hypotheses[row][1];
+        txt = hypotheses[row][2];
         removed_id = hypotheses[row][0];
-        remove_list.push(removed_id);
+
         if(txt.trim() == btn_text.trim()){
+            remove_list.push(removed_id);
             hypotheses.splice(row, 1);
         }
     }

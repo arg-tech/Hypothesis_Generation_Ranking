@@ -45,27 +45,47 @@ def process_list():
     data = request.get_json()
     aif_jsn = data['aif_json']
     removed_nodes = data['removed_nodes']
+    alt_hyps = data['alt_hyps']
+    text = data['text']
 
+
+    cent = Centrality()
     for node in removed_nodes:
         aif_jsn = remove_nodes(aif_jsn, node)
+    graph = cent.get_graph_string(aif_jsn)
+
+    cent_i_nodes = cent.get_degree_centrality(graph)
 
 
 
-    print(aif_jsn)
-    return 'Found'
+    sorted_i_nodes = cent.sort_by_centrality(cent_i_nodes)
+    incoming_nodes = cent.get_i_ra_nodes(graph, sorted_i_nodes)
+    ranked_i_nodes = get_ranking(incoming_nodes)
+    ranked_i_nodes = sort_by_rank(ranked_i_nodes)
 
-@app.route('/results')
-def render_text():
-    text = session.get('text_var', None)
 
-    context = 'militant'
+    #hyp_explain = get_exps(alt_jsn_copy)
 
-    json_path = 'static/target_data/' + context + '/20088.json'
-    hevy_file_name = 'static/target_data/' + context + '/20088_target'
+    all_nodes_explain = get_full_struct_explanation(graph, ranked_i_nodes)
+
+    hyp_explain = [hyp  for hyp in all_nodes_explain if 'H' in str(hyp[0])]
+
+    #produce_explanation_from_structure(hyp_explain)
+    #produce_explanation_from_rules(all_hypotheses)
+
+    #explain_alt_hyps(alternative_hypotheses)
+
+
+    write_json_to_file(aif_jsn, 'generated_hyps.json')
+
+    return render_template('results.html', hypothesis_list = hyp_explain, alt_hypoth = alt_hyps, question = text, aif_jsn = aif_jsn)
+
+def generate_hypotheses(context, json_path, hevy_file_name, map_counter, count):
+
+    print('Generating Hypotheses for: ' + json_path)
+
     graph, jsn = get_graph_json(json_path)
     target_schemes = get_arg_schemes_props(graph, jsn)
-
-
 
     if context == '':
         rules_path = 'rules/'
@@ -94,7 +114,7 @@ def render_text():
 
     all_hypotheses_copy = copy.deepcopy(all_hypotheses)
 
-    nodelst, edgelst = construct_aif_graph(all_hypotheses_copy, jsn)
+    nodelst, edgelst = construct_aif_graph(all_hypotheses_copy, jsn, count)
 
     jsn_copy = copy.deepcopy(jsn)
 
@@ -110,7 +130,7 @@ def render_text():
 
     alternative_hypotheses = generate_alternative_hypothesis(hypoths_list, nlp)
 
-    alt_nodes, alt_edges = alternate_hyps_aif(alternative_hypotheses)
+    alt_nodes, alt_edges = alternate_hyps_aif(alternative_hypotheses, count)
 
     alt_jsn_copy = copy.deepcopy(jsn_copy)
 
@@ -124,22 +144,108 @@ def render_text():
 
     graph2 = cent.get_graph_string(alt_jsn_copy)
     cent_i_nodes = cent.get_degree_centrality(graph2)
+
+
+
     sorted_i_nodes = cent.sort_by_centrality(cent_i_nodes)
     incoming_nodes = cent.get_i_ra_nodes(graph2, sorted_i_nodes)
     ranked_i_nodes = get_ranking(incoming_nodes)
+    ranked_i_nodes = sort_by_rank(ranked_i_nodes)
 
-    hyp_explan = get_exps(alt_jsn_copy)
 
-    hyp_explain = [hyp  for hyp in hyp_explan if 'H' in str(hyp[0])]
+    #hyp_explain = get_exps(alt_jsn_copy)
 
-    produce_explanation_from_structure(hyp_explain)
+    all_nodes_explain = get_full_struct_explanation(graph2, ranked_i_nodes)
+
+    hyp_explain = [hyp  for hyp in all_nodes_explain if 'H' in str(hyp[0])]
+
+    #produce_explanation_from_structure(hyp_explain)
     produce_explanation_from_rules(all_hypotheses)
 
     explain_alt_hyps(alternative_hypotheses)
     print('Explanations in text files structure_explanation.txt, rules_explanation.txt, alternative_hyps_explanation.txt')
 
     write_json_to_file(alt_jsn_copy, 'generated_hyps.json')
-    return render_template('results.html', hypothesis_list = hypoths_list, alt_hypoth = alternative_hypotheses, question = text, aif_jsn = alt_jsn_copy)
+
+    return hypoths_list, alternative_hypotheses, ranked_i_nodes, alt_jsn_copy, hyp_explain
+
+@app.route('/results')
+def render_text():
+    text = session.get('text_var', None)
+
+    first_word, context = parse_question(text)
+
+    #context = 'militant'
+    #20088_target
+    print(context)
+
+    overall_json = ''
+    overall_hyp_explain = []
+
+    json_path = 'target_data/' + context + '/'
+    hevy_file_name = 'target_data/' + context + '/'
+    for subdir, dirs, files in os.walk(os.path.join(app.static_folder, json_path)):
+        for i, file_name in enumerate(files):
+            if '.json' in file_name and 'hevy' not in file_name:
+                base = subdir + file_name
+
+                base_ext = os.path.splitext(base)[0]
+                hevy_f_name = file_name.split('.')[0]
+
+                jsn_path = base
+                hevy_file_name = 'target_data/' + context + '/' + str(hevy_f_name) + '_target'
+
+                hevy_file_name = os.path.join(app.static_folder, hevy_file_name)
+
+                hypoths_list, alternative_hypotheses, ranked_i_nodes, alt_jsn_copy, hyp_explain = generate_hypotheses(context, jsn_path, hevy_file_name, hevy_f_name, i)
+
+                overall_hyp_explain.extend(hyp_explain)
+
+
+                if overall_json == '':
+                    overall_json = alt_jsn_copy
+                else:
+
+
+                    jsn_copy = copy.deepcopy(alt_jsn_copy)
+                    nodes_cp = jsn_copy['nodes']
+                    edges_cp = jsn_copy['edges']
+                    locs_cp = jsn_copy['locutions']
+
+                    overall_nodes = overall_json['nodes']
+                    overall_edges = overall_json['edges']
+                    overall_locutions = overall_json['locutions']
+
+                    overall_nodes.extend(nodes_cp)
+                    overall_json['nodes'] = overall_nodes
+
+                    overall_edges.extend(edges_cp)
+                    overall_json['edges'] = overall_edges
+
+                    overall_locutions.extend(locs_cp)
+                    overall_json['locutions'] = overall_locutions
+
+
+    #
+
+    #return ''
+    return render_template('results.html', hypothesis_list = overall_hyp_explain, alt_hypoth = alternative_hypotheses, question = text, aif_jsn = alt_jsn_copy)
+
+
+def parse_question(question_text):
+    first_word = question_text.split()[0]
+    domain = check_domain(question_text)
+
+    return first_word, domain
+
+def check_domain(text):
+    text = text.lower()
+    if 'militant' in text:
+        return 'militant'
+    elif 'corporate' in text:
+        return 'corporate'
+    else:
+        return ''
 
 def get_json_string(node_path):
     dta = ''
@@ -398,6 +504,25 @@ def get_entity_from_text(nlp, text):
         if token.pos_ == 'PROPN' and token.text not in person_list and token.text not in org_list and token.text not in place_list:
             person_list.append(token.text)
     return person_list, org_list
+
+def get_entity_from_question(nlp, text):
+    if text.isupper():
+        text = text.lower()
+    doc = nlp(text)
+    person_list=[]
+    org_list = []
+    place_list = []
+    for ent in doc.ents:
+        if ent.label_ == 'PERSON':
+            person_list.append(ent.text)
+        if ent.label_ == 'ORG':
+            person_list.append(ent.text)
+        if ent.label_ == 'GPE':
+            place_list.append(ent.text)
+    for token in doc:
+        if token.pos_ == 'PROPN' and token.text not in person_list and token.text not in org_list and token.text not in place_list:
+            person_list.append(token.text)
+    return person_list, place_list
 
 def compare_schemes(full_scheme_data, scheme_list, hyps, speaker, node_text, node_id, threshold, agent_list):
     for scheme in scheme_list:
@@ -774,7 +899,7 @@ def combine_hypothesis_lists(arg_schemes_hyps, rules_hyps):
 
     return new_arg_scheme_list, rules_hyps
 
-def construct_aif_graph(hypotheses, jsn):
+def construct_aif_graph(hypotheses, jsn, counter):
     new_node_list = []
     new_edge_list = []
     rule_lst = []
@@ -793,18 +918,18 @@ def construct_aif_graph(hypotheses, jsn):
         #n_id == '' and
         if not any(d['text'] == hypothesis for d in new_node_list):
             #create node
-            n_id = "H" + str(i)
-            node_id = "H" + str(i)
+            n_id = str(counter)+"H" + str(i)
+            node_id = str(counter)+"H" + str(i)
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             node_dict = {"nodeID": node_id, "text": hypothesis, "type":"I", "timestamp":timestamp}
-            ya_id = "YA" + str(i)
+            ya_id = str(counter)+"YA" + str(i)
             ya_node = create_hyp_ya(ya_id)
-            l_id = "L" + str(i)
+            l_id = str(counter)+"L" + str(i)
             L_node = create_l_node(l_id, hypothesis)
-            edge1_id = 'E1H' + str(i)
+            edge1_id = str(counter)+'E1H' + str(i)
             edge_1 = create_edge(edge1_id, l_id, ya_id)
 
-            edge2_id = 'E2H' + str(i)
+            edge2_id = str(counter)+'E2H' + str(i)
             edge_2 = create_edge(edge2_id, ya_id, node_id)
 
             new_node_list.append(node_dict)
@@ -823,13 +948,13 @@ def construct_aif_graph(hypotheses, jsn):
             check_bool, id_str = check_hyp_list(hyp, rule_lst)
 
         if rule_number == '':
-            ra_id = 'RA' + str(i)
+            ra_id = str(counter)+'RA' + str(i)
             new_ra_node = create_ra_node(ra_id, ra_type)
 
-            edge1_id = 'EH' + str(i)
+            edge1_id = str(counter)+'EH' + str(i)
             edge_1 = create_edge(edge1_id, p_id, ra_id)
 
-            edge2_id = 'EHT' + str(i)
+            edge2_id = str(counter)+'EHT' + str(i)
             edge_2 = create_edge(edge2_id, ra_id, n_id)
 
 
@@ -838,13 +963,13 @@ def construct_aif_graph(hypotheses, jsn):
             new_edge_list.append(edge_2)
 
         elif len(rule_lst) < 1:
-            ra_id = 'RA' + str(i)
+            ra_id = str(counter)+'RA' + str(i)
             new_ra_node = create_ra_node(ra_id, ra_type)
 
-            edge1_id = 'EH' + str(i)
+            edge1_id = str(counter)+'EH' + str(i)
             edge_1 = create_edge(edge1_id, premise_id, ra_id)
 
-            edge2_id = 'EHT' + str(i)
+            edge2_id = str(counter)+'EHT' + str(i)
             edge_2 = create_edge(edge2_id, ra_id, n_id)
 
 
@@ -862,7 +987,7 @@ def construct_aif_graph(hypotheses, jsn):
             #GET RA TO CHECK TYPE
             change_ra_type(id_str,new_node_list, ra_type)
 
-            edge1_id = 'EH' + str(i)
+            edge1_id = str(counter)+'EH' + str(i)
             edge_1 = create_edge(edge1_id, premise_id, id_str)
 
 
@@ -870,13 +995,13 @@ def construct_aif_graph(hypotheses, jsn):
             rule_lst.append(hyp)
             new_edge_list.append(edge_1)
         elif not check_bool and id_str == '':
-            ra_id = 'RA' + str(i)
+            ra_id = str(counter)+'RA' + str(i)
             new_ra_node = create_ra_node(ra_id, ra_type)
 
-            edge1_id = 'EH' + str(i)
+            edge1_id = str(counter)+'EH' + str(i)
             edge_1 = create_edge(edge1_id, premise_id, ra_id)
 
-            edge2_id = 'EHT' + str(i)
+            edge2_id = str(counter)+'EHT' + str(i)
             edge_2 = create_edge(edge2_id, ra_id, n_id)
 
             hyp.append(ra_id)
@@ -1053,7 +1178,7 @@ def change_ra_type(ra_id, node_list, ra_type):
             if curr_ra_text == 'Default Inference' and ra_type != 'Default Inference':
                 node['text'] = ra_type
 
-def alternate_hyps_aif(alt_hyps):
+def alternate_hyps_aif(alt_hyps,counter):
     new_node_list = []
     new_edge_list = []
 
@@ -1061,40 +1186,40 @@ def alternate_hyps_aif(alt_hyps):
         alt_text = hyp[0]
         hyp_id = hyp[1]
 
-        n_id = "AH" + str(i)
-        node_id = "AH" + str(i)
+        n_id = str(counter)+"AH" + str(i)
+        node_id = str(counter)+"AH" + str(i)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         node_dict = {"nodeID": node_id, "text": alt_text, "type":"I", "timestamp":timestamp}
-        ya_id = "AYA" + str(i)
+        ya_id = str(counter)+"AYA" + str(i)
         ya_node = create_hyp_ya(ya_id)
 
         l_id = hyp_id.replace('H', 'L')
 
-        edge1_id = 'EA' + str(i)
+        edge1_id = str(counter)+'EA' + str(i)
         edge_1 = create_edge(edge1_id, l_id, ya_id)
 
-        edge2_id = 'EA' + str(i)
+        edge2_id = str(counter)+'EA' + str(i)
         edge_2 = create_edge(edge2_id, ya_id, node_id)
 
-        ca_1_id = 'CA' + str(i)
-        ca_2_id = 'ACA' + str(i)
+        ca_1_id = str(counter)+'CA' + str(i)
+        ca_2_id = str(counter)+'ACA' + str(i)
 
         ca_text = 'Default Conflict'
 
         ca_1_node = create_ca_node(ca_1_id, ca_text)
         ca_2_node = create_ca_node(ca_2_id, ca_text)
 
-        CAedge1_id = 'CAE' + str(i)
+        CAedge1_id = str(counter)+'CAE' + str(i)
         CAedge_1 = create_edge(CAedge1_id, hyp_id, ca_1_id)
 
-        CAedge2_id = 'CAAE' + str(i)
+        CAedge2_id = str(counter)+'CAAE' + str(i)
         CAedge_2 = create_edge(CAedge2_id, ca_1_id, node_id)
 
 
-        Cedge1_id = 'CE' + str(i)
+        Cedge1_id = str(counter)+'CE' + str(i)
         Cedge_1 = create_edge(Cedge1_id, node_id, ca_2_id)
 
-        Cedge2_id = 'CEE' + str(i)
+        Cedge2_id = str(counter)+'CEE' + str(i)
         Cedge_2 = create_edge(CAedge2_id, ca_2_id, hyp_id)
 
         new_node_list.append(node_dict)
@@ -1123,6 +1248,11 @@ def get_exps(json_data):
 
     return ras_i_list
 
+def get_full_struct_explanation(graph, i_nodes):
+    cent = Centrality()
+    i_list = cent.get_i_ra_nodes_full(graph, i_nodes)
+    return i_list
+
 def produce_explanation_from_structure(hyp_explain):
 
     f = open('structure_explanation.txt', 'a')
@@ -1138,6 +1268,7 @@ def produce_explanation_from_structure(hyp_explain):
                 print(hyp_text + ' was automatically generated because ' + prem[1], file=f)
 
     f.close()
+
 
 def produce_explanation_from_rules(all_hyps):
     f = open('rules_explanation.txt', 'a')
@@ -1193,7 +1324,7 @@ def remove_node(jsn, node_id):
 
 def remove_edge(jsn, node_id):
     other_nodes = []
-    for i, node in enumerate(jsn['edges']):
+    for i, node in reversed(list(enumerate(jsn['edges']))):
         to_id = node['toID']
         from_id = node['fromID']
         if str(to_id) == str(node_id):
@@ -1202,7 +1333,7 @@ def remove_edge(jsn, node_id):
 
         elif str(from_id) == str(node_id):
             other_nodes.append(to_id)
-            del jsn['nodes'][i]
+            del jsn['edges'][i]
     return other_nodes
 
 def remove_nodes(jsn, node_id):
@@ -1211,6 +1342,10 @@ def remove_nodes(jsn, node_id):
     for node in other_nodes_list:
         remove_node(jsn, node)
         other_nodes_lst = remove_edge(jsn, node)
-        for n in other_nodes_lst:
-            other_lst = remove_edge(jsn, n)
+        #for n in other_nodes_lst:
+            #other_lst = remove_edge(jsn, n)
     return jsn
+
+def sort_by_rank(i_nodes):
+    i_nodes.sort(key = lambda x: x[4], reverse=True)
+    return i_nodes

@@ -447,3 +447,37 @@ class Centrality:
                 count = 0
             i_list.append([i[0],i[1],i[2], count])
         return i_list
+
+    @staticmethod
+    def get_i_ra_nodes_full(graph, cent_i_nodes):
+        i_list = []
+        for i in cent_i_nodes:
+            node_succ = list(graph.predecessors(i[0]))
+
+            ra_list = []
+            if 'AH' in str(i[0]):
+
+                for n in node_succ:
+                    n_type = graph.nodes[n]['type']
+                    if n_type == 'CA':
+                        node_I = list(graph.predecessors(n))
+                        for i_node in node_I:
+                            node_type = graph.nodes[i_node]['type']
+                            node_text = graph.nodes[i_node]['text']
+
+                            if node_type == 'I':
+                                ra_list.append([i_node, node_text])
+            else:
+
+                for n in node_succ:
+                    n_type = graph.nodes[n]['type']
+                    if n_type == 'RA':
+                        node_I = list(graph.predecessors(n))
+                        for i_node in node_I:
+                            node_type = graph.nodes[i_node]['type']
+                            node_text = graph.nodes[i_node]['text']
+                            if node_type == 'I':
+                                ra_list.append([i_node, node_text])
+
+            i_list.append([i[0],i[1],i[2],i[3],i[4], ra_list])
+        return i_list
