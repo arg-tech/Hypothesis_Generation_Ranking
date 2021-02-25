@@ -27,10 +27,19 @@ from scipy import stats
 def index():
     return redirect('/form')
 
-
+@app.route('/question')
+def get_questions():
+    return render_template('question.html')
 @app.route('/form')
 def my_form():
     return render_template('index.html')
+
+@app.route('/question', methods=['POST'])
+def question_post():
+    iat_mode = 'false'
+    text = request.form['question']
+    session['text_var'] = text
+    return redirect('/results')
 
 @app.route('/form', methods=['POST'])
 def my_form_post():
@@ -47,6 +56,9 @@ def process_list():
     removed_nodes = data['removed_nodes']
     alt_hyps = data['alt_hyps']
     text = data['text']
+    hyps = data['hypotheses']
+    hypoths = data['hyps']
+
 
 
     cent = Centrality()
@@ -63,10 +75,12 @@ def process_list():
     ranked_i_nodes = get_ranking(incoming_nodes)
     ranked_i_nodes = sort_by_rank(ranked_i_nodes)
 
-
+    i_nodes_critical = get_critical_factors(graph, ranked_i_nodes)
+    #hyp_explain = get_exps(alt_jsn_copy)
+    #print(i_nodes_critical)
     #hyp_explain = get_exps(alt_jsn_copy)
 
-    all_nodes_explain = get_full_struct_explanation(graph, ranked_i_nodes)
+    all_nodes_explain = get_full_struct_explanation(graph, i_nodes_critical)
 
     hyp_explain = [hyp  for hyp in all_nodes_explain if 'H' in str(hyp[0])]
 
@@ -74,13 +88,16 @@ def process_list():
     #produce_explanation_from_rules(all_hypotheses)
 
     #explain_alt_hyps(alternative_hypotheses)
+    hyp_rule_exp = produce_explanation_from_rules(hypoths)
 
+    #all_nodes = merge_explanations(all_nodes_explain, hyp_rule_exp)
+    all_nodes = merge_explanations(hyp_explain, hyp_rule_exp)
 
     write_json_to_file(aif_jsn, 'generated_hyps.json')
 
-    return render_template('results.html', hypothesis_list = hyp_explain, alt_hypoth = alt_hyps, question = text, aif_jsn = aif_jsn)
+    return render_template('main.html', hypothesis_list = all_nodes, alt_hypoth = alt_hyps, hypotheses=hyps,question = text, aif_jsn = aif_jsn)
 
-def generate_hypotheses(context, json_path, hevy_file_name, map_counter, count):
+def generate_hypotheses(context, json_path, hevy_file_name, map_counter, count, nlp):
 
     print('Generating Hypotheses for: ' + json_path)
 
@@ -96,7 +113,7 @@ def generate_hypotheses(context, json_path, hevy_file_name, map_counter, count):
 
     rules, full_scheme_data = get_rules_data(rules_path, hevy_rules_path)
 
-    nlp = spacy.load("en_core_web_sm")
+
 
     scheme_hypos = get_argument_scheme_hypotheses(nlp, 0.33, full_scheme_data, target_schemes)
 
@@ -152,22 +169,25 @@ def generate_hypotheses(context, json_path, hevy_file_name, map_counter, count):
     ranked_i_nodes = get_ranking(incoming_nodes)
     ranked_i_nodes = sort_by_rank(ranked_i_nodes)
 
-
+    i_nodes_critical = get_critical_factors(graph2, ranked_i_nodes)
     #hyp_explain = get_exps(alt_jsn_copy)
 
-    all_nodes_explain = get_full_struct_explanation(graph2, ranked_i_nodes)
+    all_nodes_explain = get_full_struct_explanation(graph2, i_nodes_critical)
 
-    hyp_explain = [hyp  for hyp in all_nodes_explain if 'H' in str(hyp[0])]
+    #hyp_explain = [hyp  for hyp in all_nodes_explain if 'H' in str(hyp[0])]
 
     #produce_explanation_from_structure(hyp_explain)
-    produce_explanation_from_rules(all_hypotheses)
+    hyp_rule_exp = produce_explanation_from_rules(all_hypotheses)
 
-    explain_alt_hyps(alternative_hypotheses)
-    print('Explanations in text files structure_explanation.txt, rules_explanation.txt, alternative_hyps_explanation.txt')
+    all_nodes = merge_explanations(all_nodes_explain, hyp_rule_exp)
+    #all_nodes = merge_explanations(hyp_explain, hyp_rule_exp)
+    #print(all_nodes)
+    #explain_alt_hyps(alternative_hypotheses)
+    #print('Explanations in text files structure_explanation.txt, rules_explanation.txt, alternative_hyps_explanation.txt')
 
     write_json_to_file(alt_jsn_copy, 'generated_hyps.json')
 
-    return hypoths_list, alternative_hypotheses, ranked_i_nodes, alt_jsn_copy, hyp_explain
+    return all_hypotheses,alternative_hypotheses, alt_jsn_copy, all_nodes
 
 @app.route('/results')
 def render_text():
@@ -175,15 +195,25 @@ def render_text():
 
     first_word, context = parse_question(text)
 
+    search_type = get_search_type(first_word)
+
     #context = 'militant'
     #20088_target
     print(context)
-
+    nlp = spacy.load("en_core_web_sm")
     overall_json = ''
     overall_hyp_explain = []
+    overall_hyp_list = []
+    overall_alt_hyp_list = []
+    json_path = ''
+    hevy_file_name = ''
+    if context == '':
+        json_path = 'target_data/'
+        hevy_file_name = 'target_data/'
+    else:
 
-    json_path = 'target_data/' + context + '/'
-    hevy_file_name = 'target_data/' + context + '/'
+        json_path = 'target_data/' + context + '/'
+        hevy_file_name = 'target_data/' + context + '/'
     for subdir, dirs, files in os.walk(os.path.join(app.static_folder, json_path)):
         for i, file_name in enumerate(files):
             if '.json' in file_name and 'hevy' not in file_name:
@@ -193,13 +223,19 @@ def render_text():
                 hevy_f_name = file_name.split('.')[0]
 
                 jsn_path = base
-                hevy_file_name = 'target_data/' + context + '/' + str(hevy_f_name) + '_target'
+                if context == '':
+                    hevy_file_name = 'target_data/' + str(hevy_f_name) + '_target'
+                else:
+                    hevy_file_name = 'target_data/' + context + '/' + str(hevy_f_name) + '_target'
 
                 hevy_file_name = os.path.join(app.static_folder, hevy_file_name)
 
-                hypoths_list, alternative_hypotheses, ranked_i_nodes, alt_jsn_copy, hyp_explain = generate_hypotheses(context, jsn_path, hevy_file_name, hevy_f_name, i)
+                hyp_list,alternative_hypotheses, alt_jsn_copy, hyp_explain = generate_hypotheses(context, jsn_path, hevy_file_name, hevy_f_name, i, nlp)
 
                 overall_hyp_explain.extend(hyp_explain)
+                overall_hyp_list.extend(hyp_list)
+                overall_alt_hyp_list.extend(alternative_hypotheses)
+
 
 
                 if overall_json == '':
@@ -229,7 +265,63 @@ def render_text():
     #
 
     #return ''
-    return render_template('results.html', hypothesis_list = overall_hyp_explain, alt_hypoth = alternative_hypotheses, question = text, aif_jsn = alt_jsn_copy)
+    #Specifiy search her
+    all_ns = perform_search(search_type, text, overall_hyp_explain, nlp, first_word)
+    print(all_ns)
+
+    #Where new foreign fighters being militant?
+
+    return render_template('results.html', hypothesis_list = all_ns, hypotheses=overall_hyp_list, alt_hypoth = overall_alt_hyp_list, question = text, aif_jsn = overall_json)
+
+def perform_search(search_type, question, all_nodes, nlp, question_type):
+    return_nodes = []
+
+    entity = ''
+    location = ''
+
+    entity_list, location_list = get_entity_from_question(nlp, question)
+    if len(entity_list) > 0:
+        entity = entity_list[0]
+    if len(location_list) > 0:
+        location = location_list[0]
+    if search_type == 'hyp':
+        hyp_explain = [hyp  for hyp in all_nodes if 'H' in str(hyp[0])]
+
+        for hyp in hyp_explain:
+            hyp_text = hyp[2]
+            sim = get_alternate_wn_similarity(str(hyp_text), str(question))
+            if entity.lower() in hyp_text.lower():
+                return_nodes.append(hyp)
+
+            elif sim > 0.38 and len(entity_list) < 1:
+                return_nodes.append(hyp)
+    else:
+        if 'why' in question_type:
+            print()
+        else:
+            for hyp in all_nodes:
+                hyp_text = hyp[2]
+                sim = get_alternate_wn_similarity(str(hyp_text), str(question))
+                if sim > 0.5:
+                    return_nodes.append(hyp)
+    return return_nodes
+
+def merge_explanations(all_nodes, hyp_nodes_explained):
+    for node in all_nodes:
+        text = node[2]
+        hyp_found = False
+        for hyp in hyp_nodes_explained:
+            hyp_text = hyp[0]
+            hyp_exp = hyp[1]
+            if text == hyp_text:
+                hyp_found = True
+                node.append(hyp_exp)
+                break
+        if not hyp_found:
+            node.append('')
+        else:
+            hyp_found = False
+    return all_nodes
 
 
 def parse_question(question_text):
@@ -324,9 +416,10 @@ def get_rules_data(rules_path, hevy_rules_path):
     for subdir, dirs, files in os.walk(os.path.join(app.static_folder, rules_path)):
         for file_name in files:
 
-            if '.json' in file_name:
-                base = subdir + file_name
-
+            if '.json' in file_name and not 'hevy' in file_name:
+                #base = subdir + file_name
+                base  = os.path.join(app.static_folder, rules_path)
+                base = base + file_name
                 base_ext = os.path.splitext(base)[0]
                 schemes = get_arg_schemes_full_aif(base)
                 rule = get_rules(base)
@@ -1271,8 +1364,7 @@ def produce_explanation_from_structure(hyp_explain):
 
 
 def produce_explanation_from_rules(all_hyps):
-    f = open('rules_explanation.txt', 'a')
-
+    rule_explanation = []
     for hyp in all_hyps:
         text = hyp[0]
         rule_id = hyp[1]
@@ -1283,17 +1375,16 @@ def produce_explanation_from_rules(all_hyps):
         scheme = hyp[7]
 
         if rule_type == 'SIM RULE':
-            print(text + ' was generated automatically BECAUSE there was a textual similarity match with rule ' + str(rule_id), file=f)
-            print('The Similarity was ' + str(sim) + ' between ' + premise + ' and ' + rule_premise , file=f)
+            explain_text = text + ' was generated automatically BECAUSE there was a textual similarity match with rule ' + str(rule_id) + '. The Similarity was ' + str(sim) + ' between ' + premise + ' and ' + rule_premise
+            rule_explanation.append([hyp[0], explain_text])
         elif rule_type == 'EVENT RULE':
-            print(text + ' was generated automatically BECAUSE there was an event similarity match with rule ' + str(rule_id), file=f)
-            print('The Similarity was ' + str(sim) + ' between ' + premise + ' and ' + rule_premise , file=f)
+            explain_text = text + ' was generated automatically BECAUSE there was an event similarity match with rule ' + str(rule_id) + '. The Similarity was ' + str(sim) + ' between ' + premise + ' and ' + rule_premise
+            rule_explanation.append([hyp[0], explain_text])
         elif rule_type == 'SCHEME RULE':
-            print(text + ' was generated automatically BECAUSE there was an argument scheme similarity match', file=f)
-            print('The scheme was identified through argument from ' + str(scheme) + ' and premise: ' + premise, file=f )
+            explain_text = text + ' was generated automatically BECAUSE there was an argument scheme similarity match. The scheme was identified through argument from ' + str(scheme) + ' and premise: ' + premise
+            rule_explanation.append([hyp[0], explain_text])
 
-        print('', file=f)
-    f.close()
+    return rule_explanation
 
 
 def explain_alt_hyps(alt_hyps):
@@ -1349,3 +1440,82 @@ def remove_nodes(jsn, node_id):
 def sort_by_rank(i_nodes):
     i_nodes.sort(key = lambda x: x[4], reverse=True)
     return i_nodes
+
+def get_critical_factors(graph, i_nodes):
+    critical_facts = []
+    for i_node in i_nodes:
+        i_node_ID = i_node[0]
+        i_node_text = i_node[2]
+        ra_i_nodes = get_incoming_ra_nodes_with_i(graph, i_node_ID)
+        ra_i_len = len(ra_i_nodes)
+
+        if ra_i_len < 1:
+            crit_text = 'No Evidence for ' + str(i_node_text)
+            i_node.append(crit_text)
+            critical_facts.append(i_node)
+        if ra_i_len == 1:
+            crit_text = str(ra_i_nodes[0][1]) + ' is critical to the truth of ' + str(i_node_text)
+            i_node.append(crit_text)
+            critical_facts.append(i_node)
+        if ra_i_len > 1:
+            for i, ra_i in reversed(list(enumerate(ra_i_nodes))):
+                ca_i_nodes = get_incoming_ca_nodes_with_i(graph, ra_i[0])
+                ca_i_len = len(ca_i_nodes)
+
+                if ca_i_len >= 1:
+                    del ra_i_nodes[1]
+
+            if len(ra_i_nodes) < 1:
+                crit_text = 'No Concrete Evidence for ' + str(i_node_text)
+                i_node.append(crit_text)
+                critical_facts.append(i_node)
+            if len(ra_i_nodes) == 1:
+                crit_text = str(ra_i_nodes[0][1]) + ' is critical to the truth of ' + str(i_node_text)
+                i_node.append(crit_text)
+                critical_facts.append(i_node)
+            if len(ra_i_nodes) > 1:
+                crit_text = str(i_node_text) + ' can be considered acceptable'
+                i_node.append(crit_text)
+                critical_facts.append(i_node)
+    return critical_facts
+
+def get_incoming_ra_nodes_with_i(graph, i_node):
+    i_list = []
+    node_succ = list(graph.predecessors(i_node))
+    ra_list = []
+    for n in node_succ:
+        n_type = graph.nodes[n]['type']
+        if n_type == 'RA':
+            node_I = list(graph.predecessors(n))
+            for i_node in node_I:
+                node_type = graph.nodes[i_node]['type']
+                node_text = graph.nodes[i_node]['text']
+                if node_type == 'I':
+                    ra_list.append([i_node, node_text])
+
+    return ra_list
+
+def get_incoming_ca_nodes_with_i(graph, i_node):
+    i_list = []
+    node_succ = list(graph.predecessors(i_node))
+    ra_list = []
+    for n in node_succ:
+        n_type = graph.nodes[n]['type']
+        if n_type == 'CA':
+            node_I = list(graph.predecessors(n))
+            for i_node in node_I:
+                node_type = graph.nodes[i_node]['type']
+                node_text = graph.nodes[i_node]['text']
+                if node_type == 'I':
+                    ra_list.append([i_node, node_text])
+
+    return ra_list
+
+def get_search_type(question_type):
+    question_type = question_type.lower()
+    search_type = ''
+    if 'is/are' in question_type or 'do/does' in question_type or 'has/have' in question_type:
+        search_type = 'hyp'
+    else:
+        search_type = 'all'
+    return search_type

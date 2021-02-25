@@ -479,5 +479,5 @@ class Centrality:
                             if node_type == 'I':
                                 ra_list.append([i_node, node_text])
 
-            i_list.append([i[0],i[1],i[2],i[3],i[4], ra_list])
+            i_list.append([i[0],i[1],i[2],i[3],i[4],i[5], ra_list])
         return i_list

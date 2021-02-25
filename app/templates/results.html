@@ -78,8 +78,8 @@
 </style>
 </head>
 <body>
-
-<h2> {{ question }}</h2>
+<div class="maincontent">
+    <h2> {{ question }}</h2>
     {% for hyp in hypothesis_list %}
 
     <button id="btn" class="accordion"> {{hyp[2]}} </button>
@@ -87,16 +87,21 @@
     <div class="panel">
         <p> Node Ranking: {{hyp[4]}}</p>
         <p> Because:  </p>
-        {% for h in hyp[5] %}
+        <p>  {{hyp[7]}} </p>
+        {% for h in hyp[6] %}
         <p> {{ h[1] }} </p>
         {% endfor %}
+        <p> Critical Factors: </p>
+        <p>{{hyp[5]}}</p>
     </div>
     <button class="cross"> X </button>
     {% endfor %}
 
     <button onclick="printList()" class="evaluate"> Evaluate </button>
+</div>
 <script>
 var hypotheses = {{ hypothesis_list|tojson }};
+var hyps = {{hypotheses|tojson}};
 var alt_hyp = {{ alt_hypoth|tojson}};
 var aif_jsn = {{ aif_jsn|tojson}};
 var evaluate = document.getElementsByClassName("evaluate");
@@ -110,7 +115,8 @@ function printList(){
             'alt_hyps': alt_hyp,
             'removed_nodes': remove_list,
             'aif_json': aif_jsn,
-            'text' : question
+            'text' : question,
+            'hyps' : hyps
         }
 
     console.log(hypotheses);
@@ -122,12 +128,65 @@ function printList(){
     data: JSON.stringify(corp),
     dataType: "json",
     success: function(response) {
-        console.log(response);
+        document.getElementsByClassName("maincontent")[0].innerHTML = err.responseText;
+        add_button();
     },
     error: function(err) {
-        console.log(err);
+        document.getElementsByClassName("maincontent")[0].innerHTML = err.responseText;
+        add_button();
+        //console.log(err.responseText);
     }
 });
+function change_div(div_cont){
+     console.log(document.getElementsByClassName("maincontent").innerHTML);
+    }
+
+}
+
+function add_button(){
+    var btn = document.getElementsByClassName("cross");
+var i;
+
+for (i = 0; i < btn.length; i++) {
+  btn[i].addEventListener("click", function() {
+    this.style.backgroundColor = "blue";
+    var panel = this.previousElementSibling;
+    var btn_acc = panel.previousElementSibling;
+    var btn_text = btn_acc.textContent;
+    console.log(hypotheses);
+    console.log(btn_text);
+
+    for( var row = 0 ; row < hypotheses.length ; row++){
+        txt = hypotheses[row][2];
+        removed_id = hypotheses[row][0];
+
+        if(txt.trim() == btn_text.trim()){
+            remove_list.push(removed_id);
+            hypotheses.splice(row, 1);
+        }
+    }
+    panel.remove();
+    btn_acc.remove();
+    this.remove();
+    printList();
+  });
+}
+
+var acc = document.getElementsByClassName("accordion");
+var i;
+
+
+for (i = 0; i < acc.length; i++) {
+  acc[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var panel = this.nextElementSibling;
+    if (panel.style.maxHeight) {
+      panel.style.maxHeight = null;
+    } else {
+      panel.style.maxHeight = panel.scrollHeight + "px";
+    }
+  });
+}
 }
 
 var btn = document.getElementsByClassName("cross");
@@ -154,6 +213,7 @@ for (i = 0; i < btn.length; i++) {
     panel.remove();
     btn_acc.remove();
     this.remove();
+    printList();
   });
 }
 
@@ -172,6 +232,8 @@ for (i = 0; i < acc.length; i++) {
     }
   });
 }
+
+
 </script>
 
 </body>

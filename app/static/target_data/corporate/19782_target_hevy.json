@@ -1,0 +1,48 @@
+{"nodes":[
+    {"nodeID":"634543","text":"Steven L. Davis pled guilty on January 27th 1998 to federal charges that he stole and disclosed trade secrets of The Gillette Company","type":"EventDescription","timestamp":"2021-01-15 09:16:33"},
+    {"nodeID":"634547","text":"United States Attorney Donald K. Stern and Barry Mawn, Special Agent in Charge of the Boston office of the Federal Bureau of Investigation, announced today that STEVEN L. DAVIS, 47, currently residing in Kansas City, Missouri, pled guilty before U.S. District Judge Thomas Higgins in Nashville, Tennessee, to 5 counts of theft of trade secrets","type":"EventDescription","timestamp":"2021-01-15 09:16:34"},
+    {"nodeID":"634554","text":"At the change of plea hearing, a federal prosecutor told the court that in February and March, 1997, DAVIS stole and disclosed trade secrets concerning the development of a new shaving system by The Gillette Company, which is headquartered in Boston, Massachusetts","type":"EventDescription","timestamp":"2021-01-15 09:16:36"},
+    {"nodeID":"634561","text":"DAVIS, was employed as a process controls engineer for Wright Industries, Inc., a Tennessee designer of fabrication equipment, which had been hired by Gillette to assist in the development of the new shaving system","type":"EventDescription","timestamp":"2021-01-15 09:16:37"},
+    {"nodeID":"634568","text":"The new shaving system project was extremely confidential and was treated so by both Gillette and Wright Industries","type":"EventDescription","timestamp":"2021-01-15 09:16:39"},
+    {"nodeID":"634580","text":"DAVIS decided to disclose trade secret information to Gillette's competitors","type":"EventDescription","timestamp":"2021-01-15 09:16:45"},
+    {"nodeID":"634584","text":"The disclosures were made to Warner-Lambert Co., Bic, and American Safety Razor Co. DAVIS has agreed in a plea agreement that the loss caused by his conduct is at least $1.5 million","type":"EventDescription","timestamp":"2021-01-15 09:16:47"},
+    {"nodeID":"634600","text":"In October 1996, concerned about both domestic and foreign economic espionage, Congress criminalized the disclosure of trade secrets relating to products sold in interstate commerce. This case is the first case involving a Massachusetts victim","type":"EventDescription","timestamp":"2021-01-15 09:16:48"},
+    {"nodeID":"634604","text":"Judge Higgins scheduled sentencing for April 17, 1998. At that time, DAVIS faces a 10-year term of imprisonment on each of the 5 trade secrets counts, and a fine of $250,000 on each count. He may also be required to pay restitution to the victims","type":"EventDescription","timestamp":"2021-01-15 09:16:50"},
+    {"nodeID":"634608","text":"This case was investigated by the Boston Office of the Federal Bureau of Investigation with assistance from the FBI's Nashville Office. The case is being prosecuted in Tennessee by Assistant U.S. Attorney Jeanne M. Kempthorne, Deputy Chief of Stern's Economic Crimes Unit, with the assistance of Assistant U.S. Attorney Wendy Goggin, of the U.S. Attorney's Office in Nashville","type":"EventDescription","timestamp":"2021-01-15 09:16:52"},
+
+
+    {"nodeID": "E634543", "type": "Event", "name": "pled guilty", "circa": "", "inSpace": "", "involvedAgent": "Steven L. Davis", "involved": "federal charges", "atTime": "January 27th 1998", "atPlace": "", "illustrate": ""},
+    {"nodeID": "E6345431", "type": "Event", "name": "stole and disclosed trade secrets", "circa": "", "inSpace": "", "involvedAgent": ["Steven L. Davis", "The Gillette Company"], "involved": "", "atTime": "", "atPlace": "", "illustrate": ""},
+    {"nodeID": "E634547", "type": "Event", "name": "pled guilty", "circa": "", "inSpace": "", "involvedAgent": ["Attorney Donald K. Stern", "Barry Mawn", "Steven L. Davis"], "involved": "", "atTime": "", "atPlace": "", "illustrate": ""},
+    {"nodeID": "E634554", "type": "Event", "name": "stole and disclosed trade secrets", "circa": "", "inSpace": "Boston, Massachusetts", "involvedAgent": ["Steven L. Davis", "The Gillette Company"], "involved": "new shaving system", "atTime": "February and March, 1997,", "atPlace": "", "illustrate": ""},
+    {"nodeID": "E634561", "type": "Event", "name": "employment", "circa": "", "inSpace": "Boston, Massachusetts", "involvedAgent": ["Steven L. Davis","Wright Industries"], "involved": "process controls engineer", "atTime": "", "atPlace": "", "illustrate": ""},
+    {"nodeID": "E634568", "type": "Event", "name": "confidential treatment", "circa": "", "inSpace": "", "involvedAgent": ["Wright Industries", "Gillette"], "involved": "new shaving system", "atTime": "", "atPlace": "", "illustrate": ""},
+    {"nodeID": "E634584", "type": "Event", "name": "money loss", "circa": "", "inSpace": "", "involvedAgent": "", "involved": "$1.5 million", "atTime": "", "atPlace": "", "illustrate": ""},
+    {"nodeID": "E6345841", "type": "Event", "name": "stole and disclosed trade secrets", "circa": "", "inSpace": "", "involvedAgent": ["Steven L. Davis", "Warner-Lambert Co.", "Bic", "American Safety Razor Co."], "involved": "", "atTime": "", "atPlace": "", "illustrate": ""},
+    {"nodeID": "E634600", "type": "Event", "name": "domestic and foreign economic espionage", "circa": "", "inSpace": "", "involvedAgent": "", "involved": "", "atTime": "", "atPlace": "", "illustrate": ""},
+    {"nodeID": "E6346001", "type": "Event", "name": "criminalization of disclosure of trade secrets", "circa": "", "inSpace": "", "involvedAgent": "Congress", "involved": "", "atTime": "", "atPlace": "", "illustrate": ""},
+    {"nodeID": "E634604", "type": "Event", "name": "sentencing schedule", "circa": "", "inSpace": "", "involvedAgent": "Judge Higgins", "involved": "", "atTime": "April 17, 1998", "atPlace": "", "illustrate": ""},
+    {"nodeID": "E6346041", "type": "Event", "name": "term of imprisonment and fine", "circa": "", "inSpace": "", "involvedAgent": "Steven L. Davis", "involved": ["10-year on each of the 5 trade secrets", "$250,000"], "atTime": "April 17, 1998", "atPlace": "", "illustrate": ""},
+    {"nodeID": "E634608", "type": "Event", "name": "investigation", "circa": "", "inSpace": "", "involvedAgent": ["Boston Office of the Federal Bureau of Investigation", "FBI's Nashville Office"], "involved": "", "atTime": "", "atPlace": "", "illustrate": ""},
+    {"nodeID": "E6346081", "type": "Event", "name": "prosecution", "circa": "", "inSpace": "", "involvedAgent": ["Assistant U.S. Attorney Jeanne M. Kempthorne", "Deputy Chief of Stern's Economic Crimes Unit", "Assistant U.S. Attorney Wendy Goggin"], "involved": "", "atTime": "", "atPlace": "Tennessee", "illustrate": ""}
+
+],
+
+ "edges":[
+     {"edgeID":"ee1068","fromID":"634543","toID":"E634543","formEdgeID":null,"text": "describes"},
+     {"edgeID":"ee1069","fromID":"634543","toID":"E6345431","formEdgeID":null,"text": "describes"},
+     {"edgeID":"ee1070","fromID":"634547","toID":"E634547","formEdgeID":null,"text": "describes"},
+     {"edgeID":"ee1071","fromID":"634554","toID":"E634554","formEdgeID":null,"text": "describes"},
+     {"edgeID":"ee1072","fromID":"634561","toID":"E634561","formEdgeID":null,"text": "describes"},
+     {"edgeID":"ee1073","fromID":"634568","toID":"E634568","formEdgeID":null,"text": "describes"},
+     {"edgeID":"ee1074","fromID":"634580","toID":"E6345431","formEdgeID":null,"text": "describes"},
+     {"edgeID":"ee1075","fromID":"634584","toID":"E634584","formEdgeID":null,"text": "describes"},
+     {"edgeID":"ee1076","fromID":"634584","toID":"E6345841","formEdgeID":null,"text": "describes"},
+     {"edgeID":"ee1077","fromID":"634600","toID":"E634600","formEdgeID":null,"text": "describes"},
+     {"edgeID":"ee1078","fromID":"634600","toID":"E6346001","formEdgeID":null,"text": "describes"},
+     {"edgeID":"ee1079","fromID":"634604","toID":"E634604","formEdgeID":null,"text": "describes"},
+     {"edgeID":"ee1080","fromID":"634604","toID":"E6346041","formEdgeID":null,"text": "describes"},
+     {"edgeID":"ee1079","fromID":"634608","toID":"E634608","formEdgeID":null,"text": "describes"},
+     {"edgeID":"ee1080","fromID":"634608","toID":"E6346081","formEdgeID":null,"text": "describes"}
+     ]
+}

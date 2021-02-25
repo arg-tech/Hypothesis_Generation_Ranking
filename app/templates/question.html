@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Seed question</title>
+</head>
+<body>
+
+<h2>Seed question</h2>
+
+<p>Construct a seed question giving values to the following fields:</p>
+
+    <br/>
+<form>
+  <label for="context">*Choose context:</label>
+  <select id="context" name="context" onchange="setContext()">
+    <option value="military" selected>Military</option>
+    <option value="corporate_espionage">Corporate Espionage</option>
+    <option value="both">Both</option>
+  </select>
+</form>
+
+<br/>
+
+<form>
+  <label for="event">*Ask about:</label>
+  <select id="event" name="event"> </select>
+</form>
+
+    <br/>
+
+<form>
+  <label for="questiontype">*Type of question:</label>
+  <select id="questiontype" name="questiontype">
+    <option value="Who" selected>Who? </option>
+    <option value="Where">Where?</option>
+    <option value="When">When?</option>
+    <option value="Why">Why?</option>
+    <option value="What">What?</option>
+    <option value="How">How?</option>
+    <option value="Is/Are">Is/Are? </option>
+    <option value="Is/Are there">Is/Are there?</option>
+    <option value="Do/Does">Do/Does?</option>
+    <option value="Has/Have">Has/Have?</option>
+  </select>
+</form>
+
+    <br/>
+
+<form>
+  <label for="person">Include Person/Organization:</label>
+  <select id="person" name="person">
+      <option value="null" selected> [Select person] </option>
+  </select>
+</form>
+
+
+    <br/>
+
+    <form><!-- action="/action_page.php"> -->
+  <label for="location">Include Location:</label>
+  <select id="location" name="location">
+      <option value="null" selected> [Select location] </option>
+  </select>
+</form>
+
+        <br/>
+
+    <form>
+  <label for="object">Include Object:</label>
+  <select id="object" name="object">
+      <option value="null" selected>  [Select object]  </option>
+  </select>
+</form>
+
+    <br/>
+    <button type="showquestion" id="showquestionbutton" onclick="constructQuestion()" >Show question:</button>
+
+    <form method="POST">
+  <input type="text" id="questiontextarea" name="question" size="60"><br>
+
+        <br/>
+    <button type="submit" class="btn" name="sbm" value="sbm">Submit</button>
+    </form>
+
+
+
+
+<script>
+
+   var eventNames = []
+   var involvedAgents = []
+   var locations = []
+   var involvedObjects = []
+
+   var questionSelect = document.getElementById("questiontype")
+   var eventSelect = document.getElementById("event")
+   var agentSelect = document.getElementById("person")
+   var locationSelect = document.getElementById("location")
+   var objectSelect = document.getElementById("object")
+
+   var corporate_mapIDs = ["static/target_data/corporate/19782", "static/target_data/corporate/20150", "static/target_data/corporate/20152"]
+
+
+   var militant_mapIDS = ["static/target_data/militant/20088", "static/target_data/militant/20090", "static/target_data/militant/muc3_el_sal"]
+
+
+   var otherEventsMilitant = ["being militant", "being risk", "being alerted", "mobile phone erasing", "involved in militant activities", "being threat for act of terrorism"]
+
+    var otherEventsCorporate = ["involving in corporate espionage", "being risk", "conversations with competitor company", "unauthorized access", "planning a startup", "using anabolic steroids", "being bullied in workplace", "making high value purchase"]
+
+
+   function parseAIF(fileName){
+       var inodes = []
+
+       fetch(fileName.concat(".json"))
+         .then(response => response.json())
+         .then(data => {
+             for(var k in data.nodes){
+                 if(data.nodes[k].type = "I"){
+                     var inodeID = data.nodes[k].nodeID;
+                     if(!inodes.includes(inodeID)){
+                         inodes.push(inodeID)
+                     }
+                 }
+             }
+         })
+         return inodes
+   }
+
+
+   function findEvent(eventDescrID, edges, nodes){
+       var event
+
+       for(var i in edges){
+           var text = edges[i].text
+           if(text == "describes"){
+               if(edges[i].fromID == eventDescrID)
+               var eventID = edges[i].toID
+               for(var j in nodes){
+                   var nodeID = nodes[j].nodeID
+                   if(nodeID == eventID){
+                       event = nodes[j]
+                   }
+               }
+           }
+       }
+       return event
+   }
+
+   function loadSelectListWithArray(selectForm, array){
+       for (var i in array){
+          var opt = array[i]
+          var el = document.createElement("option");
+          el.textContent = opt;
+          el.value = opt;
+          selectForm.appendChild(el);
+      }
+   }
+
+   function addToArray(value, array, formName){
+       var selectForm = document.getElementById(formName)
+
+       if(!array.includes(value) && !valueExistInForm(selectForm, value) && value != ""){
+           array.push(value)
+        }
+       return array
+   }
+
+   function updateForms(nodes, edges, inodes){
+
+       var events = []
+       eventNames = []
+       involvedAgents = []
+       locations = []
+       involvedObjects = []
+
+       // load events from eventdescriptions
+       for(var k in nodes) {
+            var nodeID = nodes[k].nodeID
+            var type = nodes[k].type
+            if(type == "EventDescription"  && inodes.includes(nodeID)) {
+
+                var event = findEvent(nodeID, edges, nodes)
+                events.push(event)
+            }
+        }
+
+       for(var i in events){
+           if( typeof events[i] != "undefined"){
+                eventNames = addToArray(events[i].name, eventNames, "event")
+
+                var agents = events[i].involvedAgent
+                if(Array.isArray(agents)) {
+
+                       for(var i in agents) {
+                            involvedAgents = addToArray(agents[i], involvedAgents, "person")
+                        }
+                } else {
+                    involvedAgents = addToArray(agents, involvedAgents, "person")
+                }
+
+                var atPlace = events[i].atPlace
+                var inSpace = events[i].inSpace
+
+                if(!locations.includes(atPlace) && !locations.includes(inSpace)){
+                    if(atPlace != "")
+                        locations = addToArray(atPlace, locations, "location")
+                    if(inSpace != "")
+                        locations = addToArray(inSpace, locations, "location")
+                   // console.log(k, eventName)
+                }
+
+
+               var objects = events[i].involved
+               if(Array.isArray(objects)) {
+                   for(var i in objects) {
+                     involvedObjects = addToArray(objects[i], involvedObjects, "object")
+                   }
+               } else {
+                   involvedObjects = addToArray(objects, involvedObjects, "object")
+               }
+           }
+       }
+
+       loadSelectListWithArray(eventSelect, eventNames)
+       loadSelectListWithArray(agentSelect, involvedAgents)
+       loadSelectListWithArray(locationSelect, locations)
+       loadSelectListWithArray(objectSelect, involvedObjects)
+
+   }
+
+
+  function parseHEVY(filename, inodes){
+
+      var edges = []
+      var nodes = []
+
+      fetch(filename.concat("_target_hevy.json"))
+        .then(response => response.json())
+        .then(data => {
+            edges = data.edges
+            nodes = data.nodes
+            updateForms(nodes, edges, inodes)
+        })
+  }
+
+function loadContext(context){
+    for(var i in context){
+        var filename = context[i]
+        var inodes = parseAIF(filename)
+        parseHEVY(filename, inodes)
+    }
+   }
+function valueExistInForm(select, val){
+    var length = select.options.length;
+      for (i = length-1; i >= 0; i--) {
+          if(select.options[i].value == val){
+           return true
+          }
+      }
+      return false
+}
+
+function clearForm(select, cnt){
+    var length = select.options.length;
+    for (i = length-1; i >= cnt; i--) {
+      select.options[i] = null;
+    }
+}
+
+function clearAllForms(){
+
+
+    clearForm(eventSelect, 0)
+    clearForm(agentSelect, 1)
+    clearForm(locationSelect, 1)
+    clearForm(objectSelect, 1)
+
+    eventNames = []
+    involvedAgents = []
+    locations = []
+    involvedObjects = []
+
+}
+
+function setContext() {
+    var contextMenu = document.getElementById("context")
+    var context = contextMenu.value
+
+
+    if(context == "military"){
+
+        clearAllForms()
+        loadSelectListWithArray(eventSelect, otherEventsMilitant)
+        loadContext(militant_mapIDS)
+    } else if(context == "corporate_espionage"){
+
+        clearAllForms()
+        loadSelectListWithArray(eventSelect, otherEventsCorporate)
+        loadContext(corporate_mapIDs)
+    } else if(context == "both"){
+        clearAllForms()
+        loadSelectListWithArray(eventSelect, otherEventsMilitant)
+        loadSelectListWithArray(eventSelect, otherEventsCorporate)
+        loadContext(militant_mapIDS)
+        loadContext(corporate_mapIDs)
+
+    }
+}
+
+function constructQuestion(){
+    var question = ""
+
+    question = question.concat(questionSelect.value)
+
+    if(agentSelect.value != "null")
+    question = question.concat(" ").concat(agentSelect.value)
+
+    question = question.concat(" ").concat(eventSelect.value)
+
+
+    if(locationSelect.value != "null")
+    question = question.concat(" in ").concat(locationSelect.value)
+
+
+    if(objectSelect.value != "null")
+    question = question.concat(" ").concat(objectSelect.value)
+
+      question = question.concat("?")
+        document.getElementById("questiontextarea").value = question
+
+}
+
+loadSelectListWithArray(eventSelect, otherEventsMilitant)
+loadContext(militant_mapIDS)
+
+
+</script>
+</body>
+</html>
