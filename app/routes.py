@@ -207,7 +207,7 @@ def render_text():
 
     #context = 'militant'
     #20088_target
-    nlp = spacy.load("en_core_web_sm")
+    nlp = spacy.load("en")
     overall_json = ''
     overall_hyp_explain = []
     overall_hyp_list = []
@@ -282,7 +282,7 @@ def render_text():
 
 def perform_search(search_type, question, all_nodes, question_type, graph):
     return_nodes = []
-    nlp = spacy.load("en_core_web_sm")
+    nlp = spacy.load("en")
     entity = ''
     location = ''
     cent = Centrality()
