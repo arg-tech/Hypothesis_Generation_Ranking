@@ -447,6 +447,9 @@ def get_rules_data(rules_path, hevy_rules_path):
     data = []
     rules = []
     full_scheme_data = []
+
+    print(os.path.join(application.static_folder, rules_path))
+
     for subdir, dirs, files in os.walk(os.path.join(application.static_folder, rules_path)):
         for file_name in files:
 
