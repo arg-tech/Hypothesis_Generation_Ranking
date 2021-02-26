@@ -59,7 +59,6 @@ def process_list():
     hyps = data['hypotheses']
     hypoths = data['hyps']
 
-    print(aif_jsn)
     try:
         aif_jsn = json.loads(aif_jsn)
     except:
@@ -102,14 +101,13 @@ def process_list():
 
     all_ns = perform_search(search_type, text, all_nodes, first_word, graph)
 
-    write_json_to_file(aif_jsn, 'generated_hyps.json')
+    #write_json_to_file(aif_jsn, 'generated_hyps.json')
 
 
     return render_template('main.html', hypothesis_list = all_ns, alt_hypoth = alt_hyps, hypotheses=hyps,question = text, aif_jsn = aif_jsn)
 
 def generate_hypotheses(context, json_path, hevy_file_name, map_counter, count, nlp):
 
-    print('Generating Hypotheses for: ' + json_path)
 
     graph, jsn = get_graph_json(json_path)
     target_schemes = get_arg_schemes_props(graph, jsn)
@@ -195,7 +193,7 @@ def generate_hypotheses(context, json_path, hevy_file_name, map_counter, count, 
     #explain_alt_hyps(alternative_hypotheses)
     #print('Explanations in text files structure_explanation.txt, rules_explanation.txt, alternative_hyps_explanation.txt')
 
-    write_json_to_file(alt_jsn_copy, 'generated_hyps.json')
+    #write_json_to_file(alt_jsn_copy, 'generated_hyps.json')
 
     return all_hypotheses,alternative_hypotheses, alt_jsn_copy, all_nodes
 
@@ -209,7 +207,6 @@ def render_text():
 
     #context = 'militant'
     #20088_target
-    print(context)
     nlp = spacy.load("en_core_web_sm")
     overall_json = ''
     overall_hyp_explain = []
@@ -307,7 +304,6 @@ def perform_search(search_type, question, all_nodes, question_type, graph):
             sim = get_alternate_wn_similarity(str(hyp_text), str(question))
             if entity.lower() in hyp_text.lower():
                 if 'why' in question_type:
-                    print('Get Reasons for hypotheses')
                     prems = cent.get_i_ra_nodes_ind(graph, all_nodes, hyp_id)
                     return_nodes.extend(prems)
 
@@ -320,7 +316,6 @@ def perform_search(search_type, question, all_nodes, question_type, graph):
                     return_nodes.append(hyp)
             elif sim > 0.38 and len(entity_list) < 1:
                 if 'why' in question_type:
-                    print('Get Reasons for hypotheses')
                     prems = cent.get_i_ra_nodes_ind(graph, all_nodes, hyp_id)
                     return_nodes.extend(prems)
                 else:

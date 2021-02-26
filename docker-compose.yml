@@ -1,0 +1,8 @@
+version: '2'
+
+services:
+ argnav:
+  container_name: hypgen
+  build: .
+  ports:
+  - "8099:8099"
