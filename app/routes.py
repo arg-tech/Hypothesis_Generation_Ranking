@@ -100,7 +100,7 @@ def process_list():
 
     search_type = get_search_type(first_word)
 
-    all_ns = perform_search(search_type, text, all_nodes, first_word)
+    all_ns = perform_search(search_type, text, all_nodes, first_word, graph)
 
     write_json_to_file(aif_jsn, 'generated_hyps.json')
 
@@ -273,20 +273,22 @@ def render_text():
 
 
     #
-
+    cent = Centrality()
+    graph = cent.get_graph_string(overall_json)
     #return ''
     #Specifiy search her
-    all_ns = perform_search(search_type, text, overall_hyp_explain, first_word)
+    all_ns = perform_search(search_type, text, overall_hyp_explain, first_word, graph)
 
     #Where new foreign fighters being militant?
 
     return render_template('results.html', hypothesis_list = all_ns, hypotheses=overall_hyp_list, alt_hypoth = overall_alt_hyp_list, question = text, aif_jsn = overall_json)
 
-def perform_search(search_type, question, all_nodes, question_type):
+def perform_search(search_type, question, all_nodes, question_type, graph):
     return_nodes = []
     nlp = spacy.load("en_core_web_sm")
     entity = ''
     location = ''
+    cent = Centrality()
 
     question_type = question_type.lower()
 
@@ -300,28 +302,43 @@ def perform_search(search_type, question, all_nodes, question_type):
         hyp_explain = [hyp  for hyp in all_nodes if 'H' in str(hyp[0])]
 
         for hyp in hyp_explain:
+            hyp_id = hyp[0]
             hyp_text = hyp[2]
             sim = get_alternate_wn_similarity(str(hyp_text), str(question))
             if entity.lower() in hyp_text.lower():
                 if 'why' in question_type:
                     print('Get Reasons for hypotheses')
-                return_nodes.append(hyp)
+                    prems = cent.get_i_ra_nodes_ind(graph, all_nodes, hyp_id)
+                    return_nodes.extend(prems)
+
+                else:
+                    return_nodes.append(hyp)
             elif 'who' in question_type:
                 #get entity from hyp_text
-                print('Who Q')
+                ent_list, loc_list = get_entity_from_question(nlp, hyp_text)
+                if len(ent_list) > 0:
+                    return_nodes.append(hyp)
             elif sim > 0.38 and len(entity_list) < 1:
                 if 'why' in question_type:
                     print('Get Reasons for hypotheses')
-                return_nodes.append(hyp)
+                    prems = cent.get_i_ra_nodes_ind(graph, all_nodes, hyp_id)
+                    return_nodes.extend(prems)
+                else:
+                    return_nodes.append(hyp)
 
     else:
         if 'why' in question_type:
             print('Get hypotheses from reasons')
         else:
             for hyp in all_nodes:
+                hyp_id = hyp[0]
                 hyp_text = hyp[2]
                 sim = get_alternate_wn_similarity(str(hyp_text), str(question))
-                if sim > 0.5:
+                if 'where' in question_type and 'H' not in str(hyp_id):
+                    ent_list, loc_list = get_entity_from_question(nlp, hyp_text)
+                    if len(loc_list) > 0:
+                        return_nodes.append(hyp)
+                elif sim > 0.5 and 'H' not in str(hyp_id):
                     return_nodes.append(hyp)
     return return_nodes
 
@@ -1535,7 +1552,7 @@ def get_incoming_ca_nodes_with_i(graph, i_node):
 def get_search_type(question_type):
     question_type = question_type.lower()
     search_type = ''
-    if 'is/are' in question_type or 'do/does' in question_type or 'has/have' in question_type:
+    if 'is/are' in question_type or 'do/does' in question_type or 'has/have' in question_type or 'why' in question_type or 'who' in question_type:
         search_type = 'hyp'
     else:
         search_type = 'all'
