@@ -1,5 +1,5 @@
 from flask import render_template, request, redirect, session, Markup
-from . import app
+from . import application
 import pandas as pd
 from urllib.request import urlopen
 import requests
@@ -22,26 +22,26 @@ import os.path
 from scipy import stats
 
 
-@app.route('/')
-@app.route('/index')
+@application.route('/')
+@application.route('/index')
 def index():
     return redirect('/question')
 
-@app.route('/question')
+@application.route('/question')
 def get_questions():
     return render_template('question.html')
-@app.route('/form')
+@application.route('/form')
 def my_form():
     return render_template('index.html')
 
-@app.route('/question', methods=['POST'])
+@application.route('/question', methods=['POST'])
 def question_post():
     iat_mode = 'false'
     text = request.form['question']
     session['text_var'] = text
     return redirect('/results')
 
-@app.route('/form', methods=['POST'])
+@application.route('/form', methods=['POST'])
 def my_form_post():
     iat_mode = 'false'
     text = request.form['text']
@@ -49,7 +49,7 @@ def my_form_post():
     return redirect('/results')
 
 
-@app.route('/process_list', methods=['POST'])
+@application.route('/process_list', methods=['POST'])
 def process_list():
     data = request.get_json()
     aif_jsn = data['aif_json']
@@ -197,7 +197,7 @@ def generate_hypotheses(context, json_path, hevy_file_name, map_counter, count, 
 
     return all_hypotheses,alternative_hypotheses, alt_jsn_copy, all_nodes
 
-@app.route('/results')
+@application.route('/results')
 def render_text():
     text = session.get('text_var', None)
 
@@ -221,7 +221,7 @@ def render_text():
 
         json_path = 'target_data/' + context + '/'
         hevy_file_name = 'target_data/' + context + '/'
-    for subdir, dirs, files in os.walk(os.path.join(app.static_folder, json_path)):
+    for subdir, dirs, files in os.walk(os.path.join(application.static_folder, json_path)):
         for i, file_name in enumerate(files):
             if '.json' in file_name and 'hevy' not in file_name:
                 base = subdir + file_name
@@ -235,7 +235,7 @@ def render_text():
                 else:
                     hevy_file_name = 'target_data/' + context + '/' + str(hevy_f_name) + '_target'
 
-                hevy_file_name = os.path.join(app.static_folder, hevy_file_name)
+                hevy_file_name = os.path.join(application.static_folder, hevy_file_name)
 
                 hyp_list,alternative_hypotheses, alt_jsn_copy, hyp_explain = generate_hypotheses(context, jsn_path, hevy_file_name, hevy_f_name, i, nlp)
 
@@ -375,7 +375,7 @@ def check_domain(text):
 def get_json_string(node_path):
     dta = ''
     try:
-        with app.open_resource(node_path) as j:
+        with application.open_resource(node_path) as j:
              dta = json.loads(j.read())
     except(IOError):
         print('File was not found:')
@@ -446,18 +446,18 @@ def identifyPremScheme(premise):
 def get_rules_data(rules_path, hevy_rules_path):
     data = []
     rules = []
-    for subdir, dirs, files in os.walk(os.path.join(app.static_folder, rules_path)):
+    for subdir, dirs, files in os.walk(os.path.join(application.static_folder, rules_path)):
         for file_name in files:
 
             if '.json' in file_name and not 'hevy' in file_name:
                 #base = subdir + file_name
-                base  = os.path.join(app.static_folder, rules_path)
+                base  = os.path.join(application.static_folder, rules_path)
                 base = base + file_name
                 base_ext = os.path.splitext(base)[0]
                 schemes = get_arg_schemes_full_aif(base)
                 rule = get_rules(base)
                 hevy_file_name = file_name.split('.')[0]
-                h_jsn = get_hevy_json(hevy_file_name, os.path.join(app.static_folder, hevy_rules_path))
+                h_jsn = get_hevy_json(hevy_file_name, os.path.join(application.static_folder, hevy_rules_path))
                 rule = get_hevy_rules(rule,h_jsn)
 
                 rules.extend(rule)
