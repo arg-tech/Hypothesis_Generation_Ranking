@@ -25,7 +25,7 @@ from scipy import stats
 @app.route('/')
 @app.route('/index')
 def index():
-    return redirect('/form')
+    return redirect('/question')
 
 @app.route('/question')
 def get_questions():
@@ -59,7 +59,11 @@ def process_list():
     hyps = data['hypotheses']
     hypoths = data['hyps']
 
-
+    print(aif_jsn)
+    try:
+        aif_jsn = json.loads(aif_jsn)
+    except:
+        pass
 
     cent = Centrality()
     for node in removed_nodes:
@@ -82,7 +86,7 @@ def process_list():
 
     all_nodes_explain = get_full_struct_explanation(graph, i_nodes_critical)
 
-    hyp_explain = [hyp  for hyp in all_nodes_explain if 'H' in str(hyp[0])]
+    #hyp_explain = [hyp  for hyp in all_nodes_explain if 'H' in str(hyp[0])]
 
     #produce_explanation_from_structure(hyp_explain)
     #produce_explanation_from_rules(all_hypotheses)
@@ -90,12 +94,18 @@ def process_list():
     #explain_alt_hyps(alternative_hypotheses)
     hyp_rule_exp = produce_explanation_from_rules(hypoths)
 
-    #all_nodes = merge_explanations(all_nodes_explain, hyp_rule_exp)
-    all_nodes = merge_explanations(hyp_explain, hyp_rule_exp)
+    all_nodes = merge_explanations(all_nodes_explain, hyp_rule_exp)
+    #all_nodes = merge_explanations(hyp_explain, hyp_rule_exp)
+    first_word, context = parse_question(text)
+
+    search_type = get_search_type(first_word)
+
+    all_ns = perform_search(search_type, text, all_nodes, first_word)
 
     write_json_to_file(aif_jsn, 'generated_hyps.json')
 
-    return render_template('main.html', hypothesis_list = all_nodes, alt_hypoth = alt_hyps, hypotheses=hyps,question = text, aif_jsn = aif_jsn)
+
+    return render_template('main.html', hypothesis_list = all_ns, alt_hypoth = alt_hyps, hypotheses=hyps,question = text, aif_jsn = aif_jsn)
 
 def generate_hypotheses(context, json_path, hevy_file_name, map_counter, count, nlp):
 
@@ -266,16 +276,15 @@ def render_text():
 
     #return ''
     #Specifiy search her
-    all_ns = perform_search(search_type, text, overall_hyp_explain, nlp, first_word)
-    print(all_ns)
+    all_ns = perform_search(search_type, text, overall_hyp_explain, first_word)
 
     #Where new foreign fighters being militant?
 
     return render_template('results.html', hypothesis_list = all_ns, hypotheses=overall_hyp_list, alt_hypoth = overall_alt_hyp_list, question = text, aif_jsn = overall_json)
 
-def perform_search(search_type, question, all_nodes, nlp, question_type):
+def perform_search(search_type, question, all_nodes, question_type):
     return_nodes = []
-
+    nlp = spacy.load("en_core_web_sm")
     entity = ''
     location = ''
 

@@ -1,20 +1,19 @@
-
-    <h2> {{ question }}</h2>
+    <div class="json" id="json"> {{aif_jsn|tojson}} </div>
     {% for hyp in hypothesis_list %}
 
     <button id="btn" class="accordion"> {{hyp[2]}} </button>
 
     <div class="panel">
         <p> Node Ranking: {{hyp[4]}}</p>
-        <p> Because:  </p>
+        <br>
+        <p> Reasons for node:  </p>
         <p>  {{hyp[7]}} </p>
         {% for h in hyp[6] %}
         <p> {{ h[1] }} </p>
         {% endfor %}
+        <br>
         <p> Critical Factors: </p>
         <p>{{hyp[5]}}</p>
     </div>
     <button class="cross"> X </button>
     {% endfor %}
-
-    <button onclick="printList()" class="evaluate"> Evaluate </button>

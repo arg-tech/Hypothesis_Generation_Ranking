@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Seed question</title>
+<title>HypGen</title>
+            <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
 </head>
 <body>
-
-<h2>Seed question</h2>
-
+<header>
+<h1>Automated Hypothesis Generation</h1>
 <p>Construct a seed question giving values to the following fields:</p>
+</header>
+
 
     <br/>
-<form>
+<form class="formcontext">
   <label for="context">*Choose context:</label>
   <select id="context" name="context" onchange="setContext()">
     <option value="military" selected>Military</option>
@@ -21,14 +23,14 @@
 
 <br/>
 
-<form>
+<form class="formevent">
   <label for="event">*Ask about:</label>
   <select id="event" name="event"> </select>
 </form>
 
     <br/>
 
-<form>
+<form class="formquestion">
   <label for="questiontype">*Type of question:</label>
   <select id="questiontype" name="questiontype">
     <option value="Who" selected>Who? </option>
@@ -46,7 +48,7 @@
 
     <br/>
 
-<form>
+<form class="formperson">
   <label for="person">Include Person/Organization:</label>
   <select id="person" name="person">
       <option value="null" selected> [Select person] </option>
@@ -56,7 +58,7 @@
 
     <br/>
 
-    <form><!-- action="/action_page.php"> -->
+    <form class="formlocation">
   <label for="location">Include Location:</label>
   <select id="location" name="location">
       <option value="null" selected> [Select location] </option>
@@ -65,7 +67,7 @@
 
         <br/>
 
-    <form>
+    <form class="formobject">
   <label for="object">Include Object:</label>
   <select id="object" name="object">
       <option value="null" selected>  [Select object]  </option>
@@ -73,9 +75,9 @@
 </form>
 
     <br/>
-    <button type="showquestion" id="showquestionbutton" onclick="constructQuestion()" >Show question:</button>
+    <button type="showquestion" id="showquestionbutton" onclick="constructQuestion()" class="showquestionbutton">Show question:</button>
 
-    <form method="POST">
+    <form class="formall" method="POST">
   <input type="text" id="questiontextarea" name="question" size="60"><br>
 
         <br/>

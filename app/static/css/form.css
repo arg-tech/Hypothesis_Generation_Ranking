@@ -10,6 +10,11 @@ h1{
     font-size: 1.4em;
 }
 
+p{
+    color: white;
+    font-family: "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Helvetica, Arial, sans-serif;
+}
+
 label{
     color: white;
     font-family: "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Helvetica, Arial, sans-serif;
@@ -17,12 +22,59 @@ label{
 
 header{
     position: fixed;
-    top: 40%;
+    top: 30%;
     left: 20%;
 }
 
-form{
+.formcontext{
     position: fixed;
+    top: 40%;
+    left: 30%;
+}
+
+.formevent{
+    position: fixed;
+    top: 45%;
+    left: 30%;
+}
+
+.formquestion{
+    position: fixed;
+    top: 50%;
+    left: 30%;
+}
+
+.formperson{
+    position: fixed;
+    top: 55%;
+    left: 30%;
+}
+
+.formlocation{
+    position: fixed;
+    top: 60%;
+    left: 30%;
+}
+
+.formobject{
+    position: fixed;
+    top: 65%;
+    left: 30%;
+}
+
+.showquestionbutton{
+    position: fixed;
+    top: 70%;
+    left: 30%;
+}
+
+.formall{
+    position: fixed;
+    top: 75%;
+    left: 30%;
+}
+
+form{
     top: 45%;
     left: 20%;
 }
