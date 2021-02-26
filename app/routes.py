@@ -121,7 +121,7 @@ def generate_hypotheses(context, json_path, hevy_file_name, map_counter, count, 
 
     rules, full_scheme_data = get_rules_data(rules_path, hevy_rules_path)
 
-    print(rules)
+
 
     scheme_hypos = get_argument_scheme_hypotheses(nlp, 0.33, full_scheme_data, target_schemes)
 
@@ -448,9 +448,10 @@ def get_rules_data(rules_path, hevy_rules_path):
     rules = []
     full_scheme_data = []
 
-    print(os.path.join(application.static_folder, rules_path))
+
 
     for subdir, dirs, files in os.walk(os.path.join(application.static_folder, rules_path)):
+
         for file_name in files:
 
             if '.json' in file_name and not 'hevy' in file_name:
@@ -460,11 +461,11 @@ def get_rules_data(rules_path, hevy_rules_path):
                 base_ext = os.path.splitext(base)[0]
                 schemes = get_arg_schemes_full_aif(base)
                 rule = get_rules(base)
-                print(rule)
+
                 hevy_file_name = file_name.split('.')[0]
                 h_jsn = get_hevy_json(hevy_file_name, os.path.join(application.static_folder, hevy_rules_path))
                 rule = get_hevy_rules(rule,h_jsn)
-                print(rule)
+
                 rules.extend(rule)
                 data.extend(schemes)
             full_scheme_data = [x for x in data if x]
