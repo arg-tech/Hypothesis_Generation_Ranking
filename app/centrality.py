@@ -481,3 +481,4 @@ class Centrality:
 
             i_list.append([i[0],i[1],i[2],i[3],i[4],i[5], ra_list])
         return i_list
+

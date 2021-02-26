@@ -288,25 +288,35 @@ def perform_search(search_type, question, all_nodes, question_type):
     entity = ''
     location = ''
 
+    question_type = question_type.lower()
+
     entity_list, location_list = get_entity_from_question(nlp, question)
     if len(entity_list) > 0:
         entity = entity_list[0]
     if len(location_list) > 0:
         location = location_list[0]
     if search_type == 'hyp':
+
         hyp_explain = [hyp  for hyp in all_nodes if 'H' in str(hyp[0])]
 
         for hyp in hyp_explain:
             hyp_text = hyp[2]
             sim = get_alternate_wn_similarity(str(hyp_text), str(question))
             if entity.lower() in hyp_text.lower():
+                if 'why' in question_type:
+                    print('Get Reasons for hypotheses')
+                return_nodes.append(hyp)
+            elif 'who' in question_type:
+                #get entity from hyp_text
+                print('Who Q')
+            elif sim > 0.38 and len(entity_list) < 1:
+                if 'why' in question_type:
+                    print('Get Reasons for hypotheses')
                 return_nodes.append(hyp)
 
-            elif sim > 0.38 and len(entity_list) < 1:
-                return_nodes.append(hyp)
     else:
         if 'why' in question_type:
-            print()
+            print('Get hypotheses from reasons')
         else:
             for hyp in all_nodes:
                 hyp_text = hyp[2]
@@ -314,6 +324,8 @@ def perform_search(search_type, question, all_nodes, question_type):
                 if sim > 0.5:
                     return_nodes.append(hyp)
     return return_nodes
+
+
 
 def merge_explanations(all_nodes, hyp_nodes_explained):
     for node in all_nodes:
