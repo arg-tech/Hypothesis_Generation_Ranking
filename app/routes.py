@@ -121,7 +121,7 @@ def generate_hypotheses(context, json_path, hevy_file_name, map_counter, count, 
 
     rules, full_scheme_data = get_rules_data(rules_path, hevy_rules_path)
 
-
+    print(rules)
 
     scheme_hypos = get_argument_scheme_hypotheses(nlp, 0.33, full_scheme_data, target_schemes)
 
